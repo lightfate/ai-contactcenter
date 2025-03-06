@@ -41,7 +41,7 @@ const ParticleBackground = () => {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       
-      particles.forEach((particle, index) => {
+      particles.forEach((particle) => {
         particle.x += particle.speedX
         particle.y += particle.speedY
 
@@ -56,7 +56,7 @@ const ParticleBackground = () => {
         ctx.fill()
 
         // 连接临近粒子
-        particles.forEach((particle2, index2) => {
+        particles.forEach((particle2) => {
           const dx = particle.x - particle2.x
           const dy = particle.y - particle2.y
           const distance = Math.sqrt(dx * dx + dy * dy)

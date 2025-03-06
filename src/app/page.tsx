@@ -1,7 +1,7 @@
 'use client';
 import Image from "next/image";
 import ParticleBackground from "@/components/ParticleBackground";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 // 计算浮窗位置（固定在按钮右侧）
 const calculatePosition = (buttonRect: DOMRect) => {
@@ -466,7 +466,7 @@ export default function Home() {
                   {/* 完美服务者 */}
                   <div className="bg-blue-50 rounded-xl p-8 border border-blue-200 transform hover:scale-[1.02] transition-transform shadow-sm">
                     <h3 className="text-2xl text-blue-700 font-semibold mb-4">
-                      打造企业渴望的「完美服务者」
+                      打造企业渴望的&ldquo;完美服务者&rdquo;
                     </h3>
                     <p className="text-lg text-gray-700">
                       一位既完全熟悉自家产品，又懂客户的服务人员
@@ -476,7 +476,7 @@ export default function Home() {
                   {/* 终极服务保障 */}
                   <div className="bg-purple-50 rounded-xl p-8 border border-purple-200 transform hover:scale-[1.02] transition-transform shadow-sm">
                     <h3 className="text-2xl text-purple-700 font-semibold mb-4">
-                      提供客户期待的「终极服务保障」
+                      提供客户期待的&ldquo;终极服务保障&rdquo;
                     </h3>
                     <p className="text-lg text-gray-700">
                       随时随地、有温度、1V1 的问题解决伙伴
@@ -489,7 +489,7 @@ export default function Home() {
                   {/* 神经中枢 */}
                   <p className="text-xl text-gray-700 leading-relaxed">
                     联络中心作为企业唯一具备
-                    <span className="text-blue-700 font-semibold mx-1">「双向实时价值交换」</span>
+                    <span className="text-blue-700 font-semibold mx-1">&ldquo;双向实时价值交换&rdquo;</span>
                     能力的神经中枢
                   </p>
 
@@ -500,7 +500,7 @@ export default function Home() {
                       <span className="text-gray-700">
                         将客户互动转化为
                         <span className="text-blue-700 font-medium mx-1 group-hover:text-blue-600 transition-colors">
-                          商业价值的转化器
+                          &ldquo;商业价值的转化器&rdquo;
                         </span>
                       </span>
                     </div>
@@ -509,7 +509,7 @@ export default function Home() {
                       <span className="text-gray-700">
                         验证企业
                         <span className="text-purple-700 font-medium mx-1 group-hover:text-purple-600 transition-colors">
-                          服务承诺的试金石
+                          &ldquo;服务承诺的试金石&rdquo;
                         </span>
                       </span>
                     </div>
@@ -557,7 +557,7 @@ export default function Home() {
                       </svg>
                       <div>
                         <span className="text-gray-700">100%解决问题的</span>
-                        <span className="text-green-700 font-semibold">"兜底承诺"</span>
+                        <span className="text-green-700 font-semibold">&ldquo;兜底承诺&rdquo;</span>
                       
                       </div>
                     </div>
@@ -567,7 +567,7 @@ export default function Home() {
                       </svg>
                       <div>
                         <span className="text-gray-700">随时能说上话的</span>
-                        <span className="text-green-700 font-semibold">"真人通道"</span>
+                        <span className="text-green-700 font-semibold">&ldquo;真人通道&rdquo;</span>
                     
                       </div>
                     </div>
@@ -577,7 +577,7 @@ export default function Home() {
                       </svg>
                       <div>
                         <span className="text-gray-700">感受到被尊重的</span>
-                        <span className="text-green-700 font-semibold">"情绪价值"</span>
+                        <span className="text-green-700 font-semibold">&ldquo;情绪价值&rdquo;</span>
                        
                       </div>
                     </div>
@@ -986,7 +986,7 @@ export default function Home() {
                         <div className="max-w-6xl mx-auto px-4 mb-20">
               <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
                 <h3 className="text-2xl font-semibold text-center mb-12 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-transparent bg-clip-text">
-                  统一渠道、全生命周期、多语言、1V "1" 金牌服务
+                  统一渠道、全生命周期、多语言、1V &ldquo;1&rdquo; 金牌服务
                 </h3>
 
                 {/* 横向场景流程 */}
@@ -1105,13 +1105,13 @@ export default function Home() {
                   <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
                     <div className="absolute inset-0 bg-purple-100 rounded-full group-hover:scale-110 transition-transform"></div>
                     <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{position: 'relative', zIndex: 10}}>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3zM9 9h6v6H9V9z" />
                     </svg>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-2xl font-semibold text-purple-700 mb-4">语音模型 + 多模态视觉识别能力</h3>
                     <p className="text-gray-700 leading-relaxed mb-6">
-                      为大模型"附上眼睛和耳朵"，通过多模态技术全方位感知用户需求
+                      为大模型&ldquo;附上眼睛和耳朵&rdquo;，通过多模态技术全方位感知用户需求
                     </p>
                     <div className="grid md:grid-cols-3 gap-4">
                       {[
@@ -1287,7 +1287,7 @@ export default function Home() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-gray-700 italic">"客服响应迅速，问题一次解决，真是贴心！"</p>
+                        <p className="text-gray-700 italic">&ldquo;客服响应迅速，问题一次解决，真是贴心！&rdquo;</p>
                         <div className="text-sm text-blue-600 mt-2">— 客户之声</div>
                       </div>
                     </div>
@@ -1336,7 +1336,7 @@ export default function Home() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-gray-700 italic">"效率翻倍，成本大幅下降，助力业务增长！"</p>
+                        <p className="text-gray-700 italic">&ldquo;效率翻倍，成本大幅下降，助力业务增长！&rdquo;</p>
                         <div className="text-sm text-orange-600 mt-2">— 客服负责人</div>
                       </div>
                     </div>
@@ -1390,7 +1390,7 @@ export default function Home() {
                 计算您的投资回报
               </h2>
               <p className="text-xl text-gray-600">
-                通过智能分析，了解"闪电侠"为您带来的价值
+                通过智能分析，了解&ldquo;闪电侠&rdquo;为您带来的价值
               </p>
             </div>
 
