@@ -1,0 +1,7 @@
+scp -r \
+  .next \
+  package.json \
+  package-lock.json \
+  public \
+  next.config.js \  # 如果有自定义配置
+  root@8.136.112.131:/root/ai-contactcenter/

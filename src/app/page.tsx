@@ -1,50 +1,91 @@
 'use client';
 import Image from "next/image";
 import ParticleBackground from "@/components/ParticleBackground";
-import { useState, useEffect } from "react";
-
-// 计算浮窗位置（固定在按钮右侧）
-const calculatePosition = (buttonRect: DOMRect) => {
-  return {
-    top: buttonRect.top + window.scrollY,
-    left: buttonRect.right + 16, // 固定在按钮右侧，间距16px
-  };
-};
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // 二维码弹窗组件
-function QRCodePopup({ isOpen, onClose, position }: { isOpen: boolean; onClose: () => void; position: { top: number; left: number } }) {
+function QRCodePopup({ 
+  isOpen, 
+  onClose, 
+  buttonRef 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  buttonRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  const popupRef = useRef<HTMLDivElement>(null);
+  
+  // 计算位置的函数移到组件内部，并且只在客户端执行
+  const calculatePosition = () => {
+    if (!buttonRef.current || !popupRef.current) return { top: 0, left: 0 };
+    
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    return {
+      top: buttonRect.top + window.scrollY,
+      left: buttonRect.right + 16, // 固定在按钮右侧，间距16px
+    };
+  };
+
+  // 使用 useEffect 处理点击外部关闭
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.qr-popup-container')) {
+      if (
+        popupRef.current && 
+        !popupRef.current.contains(event.target as Node) &&
+        buttonRef.current && 
+        !buttonRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
 
-    // 添加点击事件监听
-    document.addEventListener('click', handleClickOutside);
+    // 延迟添加事件监听，避免立即触发
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
     
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
+      clearTimeout(timeoutId);
     };
+  }, [isOpen, onClose, buttonRef]);
+
+  // 使用 useEffect 处理窗口大小变化
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleResize = () => {
+      onClose();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
+  // 计算位置 - 仅在客户端执行
+  const position = calculatePosition();
+
   return (
     <div 
+      ref={popupRef}
       className="qr-popup-container fixed z-50"
       style={{ 
         top: `${position.top}px`,
         left: `${position.left}px`
       }}
-      onClick={e => e.stopPropagation()}
     >
       <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 animate-popup">
         <button 
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
           className="absolute -top-2 -right-2 w-6 h-6 bg-gray-800 rounded-full text-white flex items-center justify-center hover:bg-gray-700 transition-colors"
         >
           ×
@@ -69,33 +110,15 @@ function QRCodePopup({ isOpen, onClose, position }: { isOpen: boolean; onClose: 
 }
 
 export default function Home() {
-  const [qrPopup, setQrPopup] = useState<{ isOpen: boolean; position: { top: number; left: number } }>({
-    isOpen: false,
-    position: { top: 0, left: 0 }
-  });
+  const [isQRVisible, setIsQRVisible] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const router = useRouter();
 
+  // 修改处理函数，改为跳转到智能客服页面
   const handleShowQR = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    const button = event.currentTarget;
-    const rect = button.getBoundingClientRect();
-    
-    setQrPopup({
-      isOpen: true,
-      position: calculatePosition(rect)
-    });
+    event.preventDefault();
+    router.push('/customer-service');
   };
-
-  // 监听窗口大小变化时关闭浮窗
-  useEffect(() => {
-    const handleResize = () => {
-      if (qrPopup.isOpen) {
-        setQrPopup(prev => ({ ...prev, isOpen: false }));
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [qrPopup.isOpen]);
 
   return (
     <>
@@ -117,128 +140,452 @@ export default function Home() {
       `}</style>
       <ParticleBackground />
       <QRCodePopup 
-        isOpen={qrPopup.isOpen}
-        onClose={() => setQrPopup(prev => ({ ...prev, isOpen: false }))}
-        position={qrPopup.position}
+        isOpen={isQRVisible}
+        onClose={() => setIsQRVisible(false)}
+        buttonRef={buttonRef}
       />
+      
       <div className="relative min-h-screen">
         <header className="fixed top-0 w-full bg-white/90 backdrop-blur-sm z-50 shadow-sm border-b border-gray-100">
           <nav className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-transparent bg-clip-text">
-                GenAI-CXaas解决方案
+                AI-CXaas解决方案 Beta
               </div>
-              {/* 导航栏 
               <div className="hidden md:flex space-x-8">
-                <a href="#vision" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">愿景</a>
-                <a href="#solution" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">解决方案</a>
-                <a href="#technology" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">技术实力</a>
-                <a href="#cases" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">客户案例</a>
+                {/* 体验Demo <Link href="/customer-service" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">体验Demo</Link>*/ }
+                
               </div>
-              
-          
-              <button className="px-6 py-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-full text-white hover:shadow-md transition-all">
-                立即体验
-              </button>
-              */}
             </div>
           </nav>
         </header>
 
-        <main className="pt-24">
-          <section className="min-h-[90vh] flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
-            {/* Decorative elements */}
-            <div className="absolute top-20 right-10 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-            <div className="absolute top-40 left-10 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-            <div className="absolute bottom-20 right-20 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-            
-            {/* Background pattern */}
-            <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-            
-            <div className="container mx-auto px-6">
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="text-left space-y-8 z-10">
-                <div className="inline-block px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium mb-2 shadow-sm border border-blue-100">
-                    AI驱动 · 全生命周期 · 全渠道
+        <main className="pt-16">
+          {/* banner板块 */}
+          <section className="relative min-h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+            {/* 动态背景 */}
+            <div className="absolute inset-0 w-full h-full">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(124,58,237,0.05),rgba(124,58,237,0))]"></div>
+              <div className="absolute inset-0">
+                <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(124,58,237,0.1)" strokeWidth="1"/>
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid)" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="container mx-auto px-6 relative z-10">
+              <div className="text-center space-y-12 max-w-4xl mx-auto">
+                {/* 主标题 */}
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-extralight tracking-tight text-gray-900 leading-tight">
+                  <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-transparent bg-clip-text">
+                    AI-First 客户联络方案
+                  </span>
+                  <br />
+                  实现 1V&quot;1&quot;好服务
+                </h1>
+
+                {/* 副标题图标组 */}
+                <div className="flex flex-wrap justify-center gap-8 text-gray-600">
+                  <div className="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    <span>轻松问</span>
                   </div>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                    <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-transparent bg-clip-text">
-                      智能化升级
-                    </span>
-                    <br />您的客户服务体验
-                  </h1>
-                  <p className="text-lg text-gray-600 md:pr-10">
-                    利用最先进的生成式AI技术，打造智能、高效、个性化的客户服务体验，提升客户满意度并降低运营成本。
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <button 
-                      onClick={handleShowQR}
-                      className="px-8 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-lg text-white font-medium hover:shadow-lg transition-all"
-                    >
-                      预约演示
-                    </button>
-                    {/* 观看视频按钮 
-                    <button className="px-8 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:border-blue-500 hover:text-blue-600 transition-all flex items-center justify-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                      </svg>
-                      观看视频
-                    </button>
-                    */}
+                  <div className="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <span>好好答</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>真人感</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>进化快</span>
                   </div>
                 </div>
-                
-                {/* 右侧AI通信插图 */}
-                <div className="relative z-10 flex justify-center items-center">
-                  <div className="relative w-full max-w-md">
+
+                {/* 体验按钮 */}
+                <div className="mb-32">
+                  <Link
+                    href="https://ocs.ruijie.com.cn/#/" target="_blank"
+                    className="inline-flex items-center px-8 py-3 text-base font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    立即体验
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* 价值主张 - 通栏设计 */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border-t border-white/20">
+              <div className="container mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/20">
+                  <div className="p-6 md:p-8 flex justify-center">
+                    <div className="max-w-xs">
+                      <p className="text-sm font-normal text-gray-700 mt-1">通过Multi Agent + AgenticRAG</p>
+                      <p className="text-sm font-normal text-gray-700 mt-1">接管企业95%的基础咨询，降低95%TCO</p>
+                    </div>
+                  </div>
+                  <div className="p-6 md:p-8 flex justify-center">
+                    <div className="max-w-xs">
+                      
+                      <p className="text-sm font-normal text-gray-700 mt-1">快速对接企业内部系统，企业可以自由部署工作流，快速上线新业务</p>
+                    </div>
+                  </div>
+                  <div className="p-6 md:p-8 flex justify-center">
+                    <div className="max-w-xs">
+                      <p className="text-sm font-normal text-gray-700 mt-1">通过对半结构化数据洞察</p>
+                      <p className="text-sm font-normal text-gray-700 mt-1">辅助企业决策与经营</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          {/* 三大核心功能模块 - 直接放在banner之后 */}
+          <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+            <div className="container mx-auto px-6">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-transparent bg-clip-text">
+                    三大核心功能平台
+                  </span>
+                </h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                  全面提升客户服务体验，降低10倍运营成本，挖掘商业价值
+                </p>
+              </div>
+
+              {/* 两个主要功能卡片 - 横向排列 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                {/* AI Agent 卡片 */}
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                  <div className="p-8 md:p-10 flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-6">
+                      <h3 className="text-xl font-bold text-gray-800">闪电侠 AI Agent</h3>
+                    </div>
                     
-                    {/* 主要插图 - AI通信概念 */}
-                    <div className="bg-white rounded-2xl shadow-xl p-4 relative z-20">
-                      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
-                        <div className="flex items-center mb-6">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                            </svg>
-                          </div>
-                          <div className="ml-4">
-                            <h3 className="text-lg font-semibold text-gray-800">AI助手</h3>
-                            <p className="text-sm text-gray-500">智能对话中</p>
-                          </div>
-                        </div>
-                        
-                        {/* 对话气泡 */}
-                        <div className="space-y-4">
-                          <div className="bg-gray-100 rounded-lg p-3 max-w-xs ml-auto">
-                            <p className="text-sm text-gray-700">我需要查询我的订单状态</p>
-                          </div>
-                          
-                          <div className="bg-blue-600 rounded-lg p-3 max-w-xs">
-                            <p className="text-sm text-white">您好！我可以帮您查询订单。请提供订单号或下单时间。</p>
+                    <h4 className="text-2xl font-light mb-6 leading-tight text-gray-700">
+                      达到真人服务水平的AI Agent对话服务
+                    </h4>
+                    
+                    <div className="mt-auto">
+                      <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-100">
+                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3">
+                          <div className="flex items-center mb-3">
+                            <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                                <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+                              </svg>
+                            </div>
+                            <div className="ml-2">
+                              <div className="text-xs font-semibold text-gray-800">闪电侠 AI Agent</div>
+                              <div className="text-[10px] text-gray-500">在线</div>
+                            </div>
                           </div>
                           
-                          <div className="bg-gray-100 rounded-lg p-3 max-w-xs ml-auto">
-                            <p className="text-sm text-gray-700">订单号是 #AC-38291</p>
-                          </div>
-                          
-                          <div className="bg-blue-600 rounded-lg p-3 max-w-xs">
-                            <p className="text-sm text-white">您的订单 #AC-38291 已发货，预计明天送达。需要查看详情吗？</p>
+                          <div className="flex-grow flex flex-col justify-end">
+                            <div className="bg-white text-gray-800 rounded-lg p-2 mb-2 max-w-xs self-start text-xs shadow-sm">
+                              您好，我是闪电侠。请问您遇到了什么问题？
+                            </div>
+                            <div className="bg-purple-600 text-white rounded-lg p-2 mb-2 max-w-xs self-end text-xs shadow-sm">
+                              我的路由器突然连不上网了，指示灯一直闪烁
+                            </div>
+                            
+                            {/* 语音消息 */}
+                            <div className="bg-purple-600 text-white rounded-lg p-2 mb-2 max-w-xs self-end text-xs shadow-sm">
+                              <div className="flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg>
+                                <div className="flex-1 flex items-center">
+                                  <span className="w-1 h-1 bg-white rounded-full mx-[1px] animate-pulse"></span>
+                                  <span className="w-1 h-2 bg-white rounded-full mx-[1px] animate-pulse"></span>
+                                  <span className="w-1 h-3 bg-white rounded-full mx-[1px] animate-pulse"></span>
+                                  <span className="w-1 h-2 bg-white rounded-full mx-[1px] animate-pulse"></span>
+                                  <span className="w-1 h-1 bg-white rounded-full mx-[1px] animate-pulse"></span>
+                                </div>
+                                <span className="text-[10px] ml-1">0:08</span>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-white text-gray-800 rounded-lg p-2 mb-2 max-w-xs self-start text-xs shadow-sm">
+                              请尝试以下步骤：1. 断开路由器电源 2. 等待30秒 3. 重新连接电源
+                            </div>
+                            
+                            {/* 图片消息 */}
+                            <div className="bg-white text-gray-800 rounded-lg p-2 max-w-xs self-start text-xs shadow-sm">
+                              <div className="mb-1">这是路由器重置按钮的位置，您也可以尝试按住10秒进行重置：</div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+                
+                {/* Service Task Agent Platform 卡片 */}
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                  <div className="p-8 md:p-10 flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-6">
+                      <h3 className="text-xl font-bold text-gray-800">Service Task Agent Platform</h3>
+                     
+                    </div>
                     
-                    {/* 装饰元素 - 连接线和节点 */}
-                    <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-yellow-400 rounded-full opacity-20 z-10"></div>
-                    <div className="absolute -top-5 -right-5 w-24 h-24 bg-purple-400 rounded-full opacity-20 z-10"></div>
+                    <h4 className="text-2xl font-light mb-6 leading-tight text-gray-700">
+                      AI-First 一站式工作台，人机协同，业务随行
+                    </h4>
                     
-                    {/* 语音波形装饰 */}
-                    <div className="absolute -right-8 top-1/2 transform -translate-y-1/2 flex items-center space-x-1 z-10">
-                      <div className="w-1 h-3 bg-blue-400 rounded-full animate-pulse"></div>
-                      <div className="w-1 h-5 bg-blue-500 rounded-full animate-pulse animation-delay-300"></div>
-                      <div className="w-1 h-7 bg-blue-600 rounded-full animate-pulse animation-delay-600"></div>
-                      <div className="w-1 h-4 bg-blue-500 rounded-full animate-pulse animation-delay-900"></div>
-                      <div className="w-1 h-2 bg-blue-400 rounded-full animate-pulse animation-delay-1200"></div>
+                    <div className="mt-auto">
+                      <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-100">
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50">
+                          <div className="bg-white p-2 flex items-center justify-between border-b border-gray-200">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                              <span className="text-xs font-medium text-gray-700">服务工作台</span>
+                            </div>
+                            <div className="text-[10px] text-gray-500">在线</div>
+                          </div>
+                          
+                          <div className="flex flex-1">
+                            <div className="w-1/4 bg-gray-100 p-2">
+                              <div className="bg-blue-600 text-white text-[10px] p-2 rounded mb-1 flex items-center justify-between">
+                                <span>服务中的客户</span>
+                                <span className="bg-blue-800 px-1 rounded">12</span>
+                              </div>
+                              <div className="bg-gray-300 text-gray-700 text-[10px] p-2 rounded mb-1">
+                                Agents&Workflow
+                              </div>
+                              <div className="bg-gray-300 text-gray-700 text-[10px] p-2 rounded mb-1">
+                                知识库
+                              </div>
+                            </div>
+                            
+                            <div className="w-2/5 p-2 border-r border-gray-200">
+                              <div className="flex flex-col space-y-2">
+                                <div className="bg-purple-100 rounded p-2">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] text-gray-700">张先生 - 路由器故障</span>
+                                    <span className="bg-gray-200 text-gray-700 text-[10px] px-2 py-0.5 rounded">处理中</span>
+                                  </div>
+                                  <div className="h-4 bg-purple-200 rounded text-[10px] flex items-center px-1">
+                                    <span>信号强度检测</span>
+                                    <div className="ml-auto bg-green-500 rounded-full w-2 h-2"></div>
+                                  </div>
+                                </div>
+                                
+                                <div className="bg-purple-100 rounded p-2">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] text-gray-700">李女士 - 网络连接问题</span>
+                                    <span className="bg-gray-200 text-gray-700 text-[10px] px-2 py-0.5 rounded">待处理</span>
+                                  </div>
+                                  <div className="h-4 bg-purple-200 rounded text-[10px] flex items-center px-1">
+                                    <span>设备重启流程</span>
+                                    <div className="ml-auto bg-yellow-500 rounded-full w-2 h-2"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* 右侧AI助手区域 */}
+                            <div className="w-1/3 p-2 bg-white">
+                              <div className="flex items-center mb-2">
+                                <div className="w-4 h-4 rounded-full bg-purple-600 flex items-center justify-center mr-2">
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
+                                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </div>
+                                <span className="text-[10px] font-medium text-gray-700">AI 助手</span>
+                              </div>
+                              
+                              <div className="bg-purple-50 rounded-lg p-2 mb-2">
+                                <div className="text-[10px] text-gray-700 mb-1 font-medium">建议操作</div>
+                                <div className="text-[10px] text-gray-600 bg-white p-1 rounded border border-gray-200 mb-1 cursor-pointer hover:bg-gray-50">
+                                  请客户检查路由器电源线是否松动
+                                </div>
+                                <div className="text-[10px] text-gray-600 bg-white p-1 rounded border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                  发送路由器重置指导图片
+                                </div>
+                              </div>
+                              
+                              <div className="bg-blue-50 rounded-lg p-2 mb-2">
+                                <div className="text-[10px] text-gray-700 mb-1 font-medium">设备信息</div>
+                                <div className="grid grid-cols-2 gap-1 text-[10px]">
+                                  <div className="text-gray-500">型号:</div>
+                                  <div className="text-gray-700">RT-AC68U</div>
+                                  <div className="text-gray-500">购买日期:</div>
+                                  <div className="text-gray-700">2023-05-18</div>
+                                  <div className="text-gray-500">保修状态:</div>
+                                  <div className="text-green-600">有效</div>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-yellow-50 rounded-lg p-2">
+                                <div className="text-[10px] text-gray-700 mb-1 font-medium">常见解决方案</div>
+                                <div className="text-[10px] text-gray-600">
+                                  <p className="mb-1">• 电源重启: 断电30秒后重启</p>
+                                  <p className="mb-1">• 恢复出厂设置: 长按重置键10秒</p>
+                                  <p>• 固件更新: 检查最新固件版本</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 数据平台卡片 - 单独一行 */}
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div className="p-8 md:p-10">
+                  <div className="flex flex-col lg:flex-row lg:items-center">
+                    <div className="lg:w-1/3 mb-8 lg:mb-0 lg:pr-8">
+                      <div className="flex justify-between items-start mb-6">
+                        <h3 className="text-xl font-bold text-gray-800">客户互动数据平台</h3>
+                        
+                      </div>
+                      
+                      <h4 className="text-2xl font-light mb-6 leading-tight text-gray-700">
+                        AI-BI 挖掘客户各类互动数据，实时监测服务水平
+                      </h4>
+                    </div>
+                    
+                    <div className="lg:w-2/3 relative">
+                      <div className="rounded-xl overflow-hidden shadow-lg border border-gray-100">
+                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4">
+                          <div className="bg-white p-2 rounded-t flex items-center justify-between border-b border-gray-200">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                              <span className="text-xs font-medium text-gray-700">服务绩效指标</span>
+                            </div>
+                            <div className="text-[10px] text-gray-500">
+                              <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">2025年2月8日 - 3月6日</span>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="bg-white rounded p-3 shadow-sm">
+                              <div className="text-[10px] text-gray-500 mb-1">整体绩效指标</div>
+                              <div className="text-xs font-medium mb-1 text-gray-700">AI agents 接管率</div>
+                              <div className="flex items-end">
+                                <div className="text-lg font-bold text-gray-800">95.3%</div>
+                                <div className="text-[10px] text-green-600 ml-2 mb-1 flex items-center">
+                                  <svg className="w-3 h-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                  </svg>
+                                  7.8%
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-white rounded p-3 shadow-sm">
+                              <div className="text-xs font-medium mb-1 text-gray-700">团队绩效</div>
+                              <div className="flex flex-col">
+                                <div className="flex justify-between text-[10px] mb-1">
+                                  <span className="text-gray-600">平均处理时间</span>
+                                  <span className="text-blue-600 font-medium">21分4秒</span>
+                                </div>
+                                <div className="grid grid-cols-5 gap-1 mb-2">
+                                  {['贝拉', '艾伦', '大卫', '克拉拉', '珍妮'].map((name, index) => (
+                                    <div key={index} className="flex flex-col items-center">
+                                      <div className={`h-12 w-4 ${['bg-blue-400', 'bg-red-300', 'bg-yellow-400', 'bg-green-400', 'bg-blue-300'][index]} rounded-t`}></div>
+                                      <span className="text-[8px] text-gray-600 mt-0.5">{name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-white rounded p-3 shadow-sm col-span-2">
+                              <div className="flex justify-between items-center mb-2">
+                                <div className="text-xs font-medium text-gray-700">每周新对话数量</div>
+                                <div className="text-[10px] text-gray-500">总计: 1,248</div>
+                              </div>
+                              <div className="relative h-12">
+                                <div className="absolute inset-0 flex items-end">
+                                  <div className="h-[60%] w-1/6 bg-blue-200 relative">
+                                    <div className="absolute -top-3 w-full text-center text-[8px] text-blue-700">186</div>
+                                  </div>
+                                  <div className="h-[75%] w-1/6 bg-blue-300 relative">
+                                    <div className="absolute -top-3 w-full text-center text-[8px] text-blue-700">234</div>
+                                  </div>
+                                  <div className="h-[65%] w-1/6 bg-blue-400 relative">
+                                    <div className="absolute -top-3 w-full text-center text-[8px] text-blue-700">204</div>
+                                  </div>
+                                  <div className="h-[90%] w-1/6 bg-blue-500 relative">
+                                    <div className="absolute -top-3 w-full text-center text-[8px] text-blue-700">282</div>
+                                  </div>
+                                  <div className="h-[80%] w-1/6 bg-blue-600 relative">
+                                    <div className="absolute -top-3 w-full text-center text-[8px] text-blue-700">252</div>
+                                  </div>
+                                  <div className="h-[100%] w-1/6 bg-blue-700 relative">
+                                    <div className="absolute -top-3 w-full text-center text-[8px] text-blue-700">312</div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex justify-between text-[8px] text-gray-500 mt-1">
+                                <span>2月8日</span>
+                                <span>2月15日</span>
+                                <span>2月22日</span>
+                                <span>2月29日</span>
+                                <span>3月1日</span>
+                                <span>3月6日</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-2 bg-white rounded p-3 shadow-sm">
+                            <div className="flex justify-between items-center mb-2">
+                              <div className="text-xs font-medium text-gray-700">对话状态分布</div>
+                              <div className="flex items-center space-x-2">
+                                <div className="flex items-center">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                                  <span className="text-[8px] text-gray-600">已解决</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <div className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></div>
+                                  <span className="text-[8px] text-gray-600">处理中</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
+                                  <span className="text-[8px] text-gray-600">新对话</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="h-4 bg-gray-100 rounded-full overflow-hidden flex">
+                              <div className="h-full bg-green-500" style={{width: '58%'}}></div>
+                              <div className="h-full bg-yellow-500" style={{width: '27%'}}></div>
+                              <div className="h-full bg-blue-500" style={{width: '15%'}}></div>
+                            </div>
+                            <div className="flex justify-between text-[8px] text-gray-600 mt-1">
+                              <span>已解决: 58%</span>
+                              <span>处理中: 27%</span>
+                              <span>新对话: 15%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -466,7 +813,7 @@ export default function Home() {
                   {/* 完美服务者 */}
                   <div className="bg-blue-50 rounded-xl p-8 border border-blue-200 transform hover:scale-[1.02] transition-transform shadow-sm">
                     <h3 className="text-2xl text-blue-700 font-semibold mb-4">
-                      打造企业渴望的&ldquo;完美服务者&rdquo;
+                      打造企业渴望的「完美服务者」
                     </h3>
                     <p className="text-lg text-gray-700">
                       一位既完全熟悉自家产品，又懂客户的服务人员
@@ -476,7 +823,7 @@ export default function Home() {
                   {/* 终极服务保障 */}
                   <div className="bg-purple-50 rounded-xl p-8 border border-purple-200 transform hover:scale-[1.02] transition-transform shadow-sm">
                     <h3 className="text-2xl text-purple-700 font-semibold mb-4">
-                      提供客户期待的&ldquo;终极服务保障&rdquo;
+                      提供客户期待的「终极服务保障」
                     </h3>
                     <p className="text-lg text-gray-700">
                       随时随地、有温度、1V1 的问题解决伙伴
@@ -489,7 +836,7 @@ export default function Home() {
                   {/* 神经中枢 */}
                   <p className="text-xl text-gray-700 leading-relaxed">
                     联络中心作为企业唯一具备
-                    <span className="text-blue-700 font-semibold mx-1">&ldquo;双向实时价值交换&rdquo;</span>
+                    <span className="text-blue-700 font-semibold mx-1">「双向实时价值交换」</span>
                     能力的神经中枢
                   </p>
 
@@ -500,7 +847,7 @@ export default function Home() {
                       <span className="text-gray-700">
                         将客户互动转化为
                         <span className="text-blue-700 font-medium mx-1 group-hover:text-blue-600 transition-colors">
-                          &ldquo;商业价值的转化器&rdquo;
+                          商业价值的转化器
                         </span>
                       </span>
                     </div>
@@ -509,7 +856,7 @@ export default function Home() {
                       <span className="text-gray-700">
                         验证企业
                         <span className="text-purple-700 font-medium mx-1 group-hover:text-purple-600 transition-colors">
-                          &ldquo;服务承诺的试金石&rdquo;
+                          服务承诺的试金石
                         </span>
                       </span>
                     </div>
@@ -557,8 +904,7 @@ export default function Home() {
                       </svg>
                       <div>
                         <span className="text-gray-700">100%解决问题的</span>
-                        <span className="text-green-700 font-semibold">&ldquo;兜底承诺&rdquo;</span>
-                      
+                        <span className="text-green-700 font-semibold">&quot;兜底承诺&quot;</span>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -567,8 +913,7 @@ export default function Home() {
                       </svg>
                       <div>
                         <span className="text-gray-700">随时能说上话的</span>
-                        <span className="text-green-700 font-semibold">&ldquo;真人通道&rdquo;</span>
-                    
+                        <span className="text-green-700 font-semibold">&quot;真人通道&quot;</span>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -577,8 +922,7 @@ export default function Home() {
                       </svg>
                       <div>
                         <span className="text-gray-700">感受到被尊重的</span>
-                        <span className="text-green-700 font-semibold">&ldquo;情绪价值&rdquo;</span>
-                       
+                        <span className="text-green-700 font-semibold">&quot;情绪价值&quot;</span>
                       </div>
                     </div>
                   </div>
@@ -818,7 +1162,7 @@ export default function Home() {
             <div className="max-w-4xl mx-auto px-4 mb-20">
               <div className="grid md:grid-cols-2 gap-6">
                 {[
-                  '首次解决率 ≥95%的兜底承诺',
+                  '首次解决率 ≥95%',
                   '随时随地真人级服务体验',
                   '客户 LTV 提升 30%的智能增长引擎',
                   '综合成本TCO只要原来的 1/10'
@@ -986,7 +1330,7 @@ export default function Home() {
                         <div className="max-w-6xl mx-auto px-4 mb-20">
               <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
                 <h3 className="text-2xl font-semibold text-center mb-12 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-transparent bg-clip-text">
-                  统一渠道、全生命周期、多语言、1V &ldquo;1&rdquo; 金牌服务
+                  统一渠道、全生命周期、多语言、1V "1" 金牌服务
                 </h3>
 
                 {/* 横向场景流程 */}
@@ -1105,13 +1449,13 @@ export default function Home() {
                   <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
                     <div className="absolute inset-0 bg-purple-100 rounded-full group-hover:scale-110 transition-transform"></div>
                     <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{position: 'relative', zIndex: 10}}>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3zM9 9h6v6H9V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-2xl font-semibold text-purple-700 mb-4">语音模型 + 多模态视觉识别能力</h3>
                     <p className="text-gray-700 leading-relaxed mb-6">
-                      为大模型&ldquo;附上眼睛和耳朵&rdquo;，通过多模态技术全方位感知用户需求
+                      为大模型"附上眼睛和耳朵"，通过多模态技术全方位感知用户需求
                     </p>
                     <div className="grid md:grid-cols-3 gap-4">
                       {[
@@ -1287,7 +1631,7 @@ export default function Home() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-gray-700 italic">&ldquo;客服响应迅速，问题一次解决，真是贴心！&rdquo;</p>
+                        <p className="text-gray-700 italic">"客服响应迅速，问题一次解决，真是贴心！"</p>
                         <div className="text-sm text-blue-600 mt-2">— 客户之声</div>
                       </div>
                     </div>
@@ -1336,7 +1680,7 @@ export default function Home() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-gray-700 italic">&ldquo;效率翻倍，成本大幅下降，助力业务增长！&rdquo;</p>
+                        <p className="text-gray-700 italic">"效率翻倍，成本大幅下降，助力业务增长！"</p>
                         <div className="text-sm text-orange-600 mt-2">— 客服负责人</div>
                       </div>
                     </div>
@@ -1390,7 +1734,7 @@ export default function Home() {
                 计算您的投资回报
               </h2>
               <p className="text-xl text-gray-600">
-                通过智能分析，了解&ldquo;闪电侠&rdquo;为您带来的价值
+                通过智能分析，了解"闪电侠"为您带来的价值
               </p>
             </div>
 
@@ -1539,6 +1883,9 @@ export default function Home() {
           </section>
 
           
+          
+          {/* 其他内容 */}
+          {/* ... existing code ... */}
         </main>
 
         {/* Professional Footer */}
@@ -1641,7 +1988,7 @@ export default function Home() {
                 </ul>
               </div>
             </div>
-            
+
             {/* Bottom Footer */}
             <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
               <div className="text-gray-500 text-sm">
