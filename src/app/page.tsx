@@ -186,7 +186,7 @@ export default function Home() {
                     AI-First 客户联络方案
                   </span>
                   <br />
-                  实现 1V&quot;1&quot;好服务
+                  实现 10V&quot;1&quot;好服务
                 </h1>
 
                 {/* 副标题图标组 */}
