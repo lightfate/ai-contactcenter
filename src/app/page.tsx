@@ -183,7 +183,7 @@ export default function Home() {
                 {/* 主标题 */}
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-extralight tracking-tight text-gray-900 leading-tight">
                   <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-transparent bg-clip-text">
-                    AI-First 客户联络方案
+                    AI-First 企业联络中心方案
                   </span>
                   <br />
                   实现 1V&quot;1&quot;好服务
