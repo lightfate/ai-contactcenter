@@ -153,7 +153,7 @@ export default function Home() {
                 AI-CXaas解决方案 Beta
               </div>
               <div className="hidden md:flex space-x-8">
-                {/* 体验Demo <Link href="/customer-service" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">体验Demo</Link>*/ }
+                体验Demo <Link href="/chat" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">体验Demo</Link>
                 
               </div>
             </div>
@@ -220,7 +220,7 @@ export default function Home() {
                 {/* 体验按钮 */}
                 <div className="mb-32">
                   <Link
-                    href="https://ocs.ruijie.com.cn/#/" target="_blank"
+                    href="/chat" target="_blank"
                     className="inline-flex items-center px-8 py-3 text-base font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                   >
                     立即体验
