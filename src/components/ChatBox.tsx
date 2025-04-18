@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ChatMessage from './ChatMessage';
+import { sendChatMessage, processStreamResponse, Message as ApiMessage, Reference as ApiReference, initApi } from '../services/api';
 
 // 定义消息类型
 type MessageRole = 'user' | 'assistant' | 'system';
@@ -72,6 +73,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // 初始化API
+  useEffect(() => {
+    initApi().catch(console.error);
+  }, []);
+
   // 自动滚动到底部
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,306 +110,110 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     try {
       // 准备发送给API的消息记录
-      const apiMessages = [...messages, userMessage].map(({ role, content }) => ({
+      const apiMessages: ApiMessage[] = [...messages, userMessage].map(({ role, content }) => ({
         role,
         content,
       }));
 
-      // 准备API请求参数
-      const requestBody = {
-        messages: apiMessages,
-        stream: true, // 使用流式输出
-        chatId: chatId, // 如果有聊天ID就传递
-      };
-
-      // 发送请求到我们的API端点
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      // 检查响应状态
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '请求失败');
+      // 发送消息到API
+      const streamResponse = await sendChatMessage(apiMessages);
+      
+      if (!streamResponse) {
+        throw new Error('无法获取流式响应');
       }
-
-      // 获取并保存响应头中的chatId
-      const responseChatId = response.headers.get('X-Chat-ID');
-      if (responseChatId) {
-        setChatId(responseChatId);
-      }
-
-      // 处理流式响应
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('无法读取响应流');
 
       // 设置为流式状态
       setIsLoading(false);
       setIsStreaming(true);
       setStreamingContent('');
 
-      // 准备接收的变量
-      let accumulatedContent = '';
-      let references: Reference[] = [];
+      // 处理流式响应
+      await processStreamResponse(
+        streamResponse,
+        // 内容更新回调
+        (content) => {
+          setStreamingContent(content);
+        },
+        // 完成回调
+        (response) => {
+          // 流式传输完成，添加完整消息
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: response.answer,
+            references: response.references,
+            chatId: response.chatId || chatId,
+            // 添加自定义属性来保存流程步骤信息
+            flowSteps: {
+              completed: Array.from(completedNodes),
+              active: [],
+              all: FLOW_STEPS
+            }
+          };
 
-      // 读取流式数据
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        // 解码收到的数据
-        const chunk = new TextDecoder().decode(value);
-        const lines = chunk
-          .split('\n')
-          .filter(line => line.trim() !== '');
-
-        for (const line of lines) {
-          // 检查是否是结束标记
-          if (line.includes('[DONE]')) {
-            // 流式传输完成，添加完整消息
-            const assistantMessage: Message = {
-              role: 'assistant',
-              content: accumulatedContent,
-              references: references,
-              chatId: chatId,
-              // 添加自定义属性来保存流程步骤信息
-              flowSteps: {
-                completed: Array.from(completedNodes),
-                active: [],
-                all: FLOW_STEPS
-              }
-            };
-
-            setMessages(prev => [...prev, assistantMessage]);
-            setIsStreaming(false);
-            setCurrentNodeStatus(null);
-            // 清空状态
-            setCompletedNodes(new Set());
-            setActiveNodes(new Set());
-            return;
-          }
-
-          try {
-            // 处理事件类型
-            // 处理flowNodeStatus事件
-            if (line.startsWith('event: flowNodeStatus')) {
-              // 提取JSON部分，确保有空格分隔
-              const statusContentMatch = line.match(/^event: flowNodeStatus\s+(.+)$/);
-              if (!statusContentMatch || !statusContentMatch[1]) {
-                console.error('flowNodeStatus格式错误:', line);
-                continue;
-              }
-              
-              const statusContent = statusContentMatch[1].trim();
-              console.log('准备解析状态内容:', statusContent);
-              
-              try {
-                // 解析JSON内容
-                const statusData = JSON.parse(statusContent);
-                console.log('节点状态:', statusData);
-                
-                // 将原始节点名称映射到标准流程步骤
-                const standardNodeName = FLOW_NODE_MAPPINGS[statusData.name] || statusData.name;
-                
-                // 更新当前节点状态
-                setCurrentNodeStatus({
-                  status: statusData.status,
-                  name: standardNodeName
-                });
-                
-                // 更新活跃节点集合
-                setActiveNodes(prev => {
-                  const newSet = new Set<string>(prev);
-                  newSet.add(standardNodeName);
-                  
-                  // 找到当前节点在标准流程中的索引
-                  const currentIndex = FLOW_STEPS.indexOf(standardNodeName);
-                  if (currentIndex > 0) {
-                    // 添加所有之前的节点到已完成节点集合
-                    setCompletedNodes(prevCompleted => {
-                      const newCompleted = new Set<string>(prevCompleted);
-                      for (let i = 0; i < currentIndex; i++) {
-                        newCompleted.add(FLOW_STEPS[i]);
-                      }
-                      return newCompleted;
-                    });
-                  }
-                  
-                  return newSet;
-                });
-                
-                // 如果状态为"complete"，将其添加到已完成节点集合
-                if (statusData.status === 'complete') {
-                  setCompletedNodes(prev => {
-                    const newSet = new Set<string>(prev);
-                    newSet.add(standardNodeName);
-                    return newSet;
-                  });
-                  
-                  // 从活跃节点中移除
-                  setActiveNodes(prev => {
-                    const newSet = new Set<string>(prev);
-                    newSet.delete(standardNodeName);
-                    return newSet;
-                  });
+          setMessages(prev => [...prev, assistantMessage]);
+          setIsStreaming(false);
+          setStreamingContent('');
+          setCurrentNodeStatus(null);
+          // 清空状态
+          setCompletedNodes(new Set());
+          setActiveNodes(new Set());
+        },
+        // 错误回调
+        (error) => {
+          console.error('流式传输错误:', error);
+          setError(`请求出错: ${error.message}`);
+          setIsStreaming(false);
+          setIsLoading(false);
+        },
+        // 状态更新回调
+        (status) => {
+          setCurrentNodeStatus(status);
+          
+          // 将原始节点名称映射到标准流程步骤
+          const standardNodeName = FLOW_NODE_MAPPINGS[status.name] || status.name;
+          
+          // 更新活跃节点集合
+          setActiveNodes(prev => {
+            const newSet = new Set<string>(prev);
+            newSet.add(standardNodeName);
+            
+            // 找到当前节点在标准流程中的索引
+            const currentIndex = FLOW_STEPS.indexOf(standardNodeName);
+            if (currentIndex > 0) {
+              // 添加所有之前的节点到已完成节点集合
+              setCompletedNodes(prevCompleted => {
+                const newCompleted = new Set<string>(prevCompleted);
+                for (let i = 0; i < currentIndex; i++) {
+                  newCompleted.add(FLOW_STEPS[i]);
                 }
-              } catch (jsonError) {
-                console.error('解析节点状态失败:', jsonError);
-              }
-              continue;
+                return newCompleted;
+              });
             }
             
-            // 处理answer事件
-            if (line.startsWith('event: answer')) {
-              // 提取answer后面的内容
-              const content = line.replace(/^event: answer/, '');
-              if (content) {
-                accumulatedContent += content;
-                setStreamingContent(accumulatedContent);
-                
-                // 当开始接收答案内容时，将"AI对话"标记为已完成
-                // 将"组织答案"设为当前活跃节点
-                if (accumulatedContent.length <= content.length * 2) {
-                  setCompletedNodes(prev => {
-                    const newSet = new Set<string>(prev);
-                    // 将所有之前的步骤标记为已完成
-                    FLOW_STEPS.slice(0, 4).forEach(step => newSet.add(step));
-                    return newSet;
-                  });
-                  
-                  setActiveNodes(prev => {
-                    const newSet = new Set<string>();
-                    newSet.add('组织答案');
-                    return newSet;
-                  });
-                  
-                  setCurrentNodeStatus({
-                    status: 'running',
-                    name: '组织答案'
-                  });
-                }
-              }
-              continue;
-            }
+            return newSet;
+          });
+          
+          // 如果状态为"complete"，将其添加到已完成节点集合
+          if (status.status === 'complete') {
+            setCompletedNodes(prev => {
+              const newSet = new Set<string>(prev);
+              newSet.add(standardNodeName);
+              return newSet;
+            });
             
-            // 处理标准SSE格式 "data: {...}"
-            if (line.startsWith('data: ')) {
-              const message = line.replace(/^data: /, '');
-              
-              // 如果是JSON格式，按原来的方式处理
-              if (message.startsWith('{')) {
-                const data = JSON.parse(message);
-                
-                // 提取内容增量
-                const deltaContent = data.choices?.[0]?.delta?.content || '';
-                if (deltaContent) {
-                  accumulatedContent += deltaContent;
-                  setStreamingContent(accumulatedContent);
-                  
-                  // 同样适用上面的逻辑
-                  if (accumulatedContent.length <= deltaContent.length * 2) {
-                    setCompletedNodes(prev => {
-                      const newSet = new Set<string>(prev);
-                      // 将所有之前的步骤标记为已完成
-                      FLOW_STEPS.slice(0, 4).forEach(step => newSet.add(step));
-                      return newSet;
-                    });
-                    
-                    setActiveNodes(prev => {
-                      const newSet = new Set<string>();
-                      newSet.add('组织答案');
-                      return newSet;
-                    });
-                    
-                    setCurrentNodeStatus({
-                      status: 'running',
-                      name: '组织答案'
-                    });
-                  }
-                }
-
-                // 提取引用 (如果有)
-                const deltaReferences = data.choices?.[0]?.delta?.references;
-                if (deltaReferences && Array.isArray(deltaReferences)) {
-                  references = [...references, ...deltaReferences];
-                }
-              }
-            } 
-            // 处理其他可能的事件
-            else if (line.startsWith('event: ')) {
-              // 这里可以处理其他事件类型
-              console.log('其他事件类型:', line);
-            }
-            // 尝试处理纯文本内容
-            else if (line.trim()) {
-              // 检查是否是JSON对象字符串
-              try {
-                if (line.trim().startsWith('{') && line.trim().endsWith('}')) {
-                  const jsonData = JSON.parse(line.trim());
-                  if (jsonData.status && jsonData.name) {
-                    // 这是一个flowNodeStatus的JSON数据，但没有event前缀
-                    const standardNodeName = FLOW_NODE_MAPPINGS[jsonData.name] || jsonData.name;
-                    
-                    setCurrentNodeStatus({
-                      status: jsonData.status,
-                      name: standardNodeName
-                    });
-                    
-                    // 更新活跃节点集合
-                    setActiveNodes(prev => {
-                      const newSet = new Set<string>(prev);
-                      newSet.add(standardNodeName);
-                      return newSet;
-                    });
-                    
-                    // 找到当前节点在标准流程中的索引
-                    const currentIndex = FLOW_STEPS.indexOf(standardNodeName);
-                    if (currentIndex > 0) {
-                      // 添加所有之前的节点到已完成节点集合
-                      setCompletedNodes(prevCompleted => {
-                        const newCompleted = new Set<string>(prevCompleted);
-                        for (let i = 0; i < currentIndex; i++) {
-                          newCompleted.add(FLOW_STEPS[i]);
-                        }
-                        return newCompleted;
-                      });
-                    }
-                    
-                    continue;
-                  }
-                }
-              } catch (e) {
-                // 不是有效的JSON，继续当作纯文本处理
-              }
-              
-              console.log('纯文本内容:', line);
-              // 如果是纯文本，直接添加到内容中
-              accumulatedContent += line;
-              setStreamingContent(accumulatedContent);
-            }
-          } catch (e) {
-            console.error('解析流数据失败:', e, line);
+            // 从活跃节点中移除
+            setActiveNodes(prev => {
+              const newSet = new Set<string>(prev);
+              newSet.delete(standardNodeName);
+              return newSet;
+            });
           }
         }
-      }
-
-      // 流完成后重置状态
-      setIsStreaming(false);
-      setCurrentNodeStatus(null);
-      setCompletedNodes(new Set());
-      setActiveNodes(new Set());
+      );
     } catch (err) {
-      console.error('聊天错误:', err);
-      setError(err instanceof Error ? err.message : '发送消息失败');
+      console.error('发送消息失败:', err);
+      setError(err instanceof Error ? err.message : '请求失败');
       setIsLoading(false);
-      setIsStreaming(false);
-      setCurrentNodeStatus(null);
-      setCompletedNodes(new Set());
-      setActiveNodes(new Set());
     }
   };
 
