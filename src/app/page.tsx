@@ -153,7 +153,7 @@ export default function Home() {
                 AI-CXaas解决方案 Beta
               </div>
               <div className="hidden md:flex space-x-8">
-                体验Demo <Link href="/chat" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">体验Demo</Link>
+               <Link href="/chat" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">体验Demo</Link>
                 
               </div>
             </div>

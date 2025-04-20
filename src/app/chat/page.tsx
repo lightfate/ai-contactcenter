@@ -1,22 +1,39 @@
 'use client';
+import ChatInterface from "@/components/features/chat-interface"
+import Image from "next/image"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
-import React from 'react';
-import ChatBox from '../../components/ChatBox';
-
-export default function ChatPage() {
+export default function Home() {
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)]">
-      
-      
-      <main className="flex-1 overflow-hidden">
-        <div className="max-w-5xl mx-auto h-full">
-          <ChatBox className="h-full" />
-        </div>
-      </main>
-      
-      <footer className="bg-gray-50 border-t p-2 text-center text-xs text-gray-500">
-        © 2025 锐捷青鸟AI联络中心解决方案提供服务。
-      </footer>
-    </div>
-  );
-} 
+    <TooltipProvider>
+      <div className="flex flex-col h-screen bg-white">
+        <header className="sticky top-0 z-10 border-b bg-white/90 backdrop-blur-sm">
+          <div className="container flex h-14 items-center px-4 max-w-4xl mx-auto">
+            <div className="flex items-center gap-2">
+              <div className="rounded-md ">
+                <Image src="/logo.png" alt="Logo" width={32} height={32} />
+              </div>
+              <h1 className="text-xl font-bold ">服务中心</h1>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <a
+                href="/"
+                className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+              >
+                <svg className="icon-sm">
+                  <use href="/icons.svg#icon-home" />
+                </svg>
+                首页
+              </a>
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 flex flex-col items-center bg-white">
+          <div className="w-full max-w-4xl mx-auto h-full">
+            <ChatInterface />
+          </div>
+        </main>
+      </div>
+    </TooltipProvider>
+  )
+}
