@@ -52,7 +52,7 @@ export default function WelcomeCard() {
                 <Image src="/service-avatar.webp" alt="头像" width={38} height={38} />
               </div>
         </div>
-        <h2 className="text-base font-bold">青青·客服助手</h2>
+        <h2 className="text-base font-bold">青青 · 客服助手</h2>
       </div>
       
       {/* 内容行 */}
