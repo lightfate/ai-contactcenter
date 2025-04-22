@@ -438,6 +438,18 @@ export default function ChatInterface() {
                       
                       if (searchNode && searchNode.quoteList && searchNode.quoteList.length > 0) {
                         forceLog("从flowResponses提取到引用来源:", searchNode.quoteList);
+                        console.log("【调试】完整知识库引用数据:", JSON.stringify(searchNode.quoteList, null, 2));
+                        
+                        // 检查引用中是否有文件URL
+                        searchNode.quoteList.forEach((quote: any, index: number) => {
+                          console.log(`【调试】引用 ${index+1} 详情:`, {
+                            sourceName: quote.sourceName,
+                            q: quote.q?.substring(0, 50) + (quote.q?.length > 50 ? '...' : ''),
+                            url: quote.url || '未提供',
+                            fileId: quote.fileId || '未提供',
+                            完整数据: quote
+                          });
+                        });
                         
                         // 转换为我们的引用格式，确保文件名正确显示
                         const references = searchNode.quoteList.map((quote: any) => {
@@ -451,13 +463,24 @@ export default function ChatInterface() {
                             title = '参考资料';
                           }
                           
+                          // 尝试构建有效的URL
+                          let url = '#';
+                          
+                          // 如果有fileId，可以构建下载链接
+                          if (quote.fileId) {
+                            url = `/api/files/${quote.fileId}/download`;
+                          } else if (quote.url && quote.url !== '#') {
+                            url = quote.url;
+                          }
+                          
                           // 为调试添加一个随机ID，这样每个来源都是唯一的，方便检查
                           const uniqueId = Math.floor(Math.random() * 10000);
                           
                           return {
                             title: title,
-                            url: quote.url || '#',
-                            id: uniqueId // 添加一个唯一ID，用于区分相同标题的来源
+                            url: url,
+                            id: uniqueId, // 添加一个唯一ID，用于区分相同标题的来源
+                            fileId: quote.fileId // 保留原始fileId以备后用
                           };
                         });
                         

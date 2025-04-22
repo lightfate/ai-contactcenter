@@ -21,7 +21,7 @@ export default function SourceReference({ sources }: SourceReferenceProps) {
       animate={{ opacity: 1, height: "auto" }}
       transition={{ duration: 0.3 }}
     >
-      <div className="text-sm text-gray-500 mb-1">来源</div>
+      <div className="text-sm text-gray-500 mb-1">查看文档</div>
       <div className="space-y-1">
         {sources.map((source, index) => (
           <motion.div
