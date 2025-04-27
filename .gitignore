@@ -3,12 +3,7 @@
 # dependencies
 /node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
 
 # testing
 /coverage
@@ -28,8 +23,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
+# local env files
+.env*.local
+.env
 
 # vercel
 .vercel
@@ -37,3 +34,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 构建缓存
+.cache
+.temp
+*.log
+.swc/
+
+# IDE文件
+.vscode/
+.idea/
+*.iml
+*.swp
+.cursor/
+
+# 备份文件
+*~
+*.bak
+*.backup
