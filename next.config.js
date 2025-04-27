@@ -17,7 +17,7 @@ const nextConfig = {
     return [
       {
         source: '/openapi/:path*',
-        destination: process.env.FASTGPT_API_URL + '/openapi/:path*',
+        destination: process.env.NEXT_PUBLIC_FASTGPT_API_URL + '/openapi/:path*',
       }
     ]
   }

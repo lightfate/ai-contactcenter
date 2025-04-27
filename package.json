@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack  --port 50010",
+    "dev": "next dev --turbopack  --port 50012",
     "build": "next build",
     "start": "next start  --port 50010",
     "lint": "next lint"
@@ -53,6 +53,7 @@
     "node-fetch": "^3.3.2",
     "nookies": "^2.5.2",
     "react": "^19.1.0",
+    "react-cookie": "^8.0.1",
     "react-day-picker": "^9.6.7",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.56.0",

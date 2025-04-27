@@ -4,6 +4,9 @@ import ParticleBackground from "@/components/ParticleBackground";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Cookies } from "react-cookie";
+
+const cookies = new Cookies();
 
 // 二维码弹窗组件
 function QRCodePopup({
@@ -137,6 +140,7 @@ export default function Home() {
       if (!response.ok) throw new Error("登录失败");
       const data = await response.json();
       const token = data.data.token;
+      cookies.set("eai_token", token, { path: "/" });
 
       localStorage.setItem("authToken", token);
 

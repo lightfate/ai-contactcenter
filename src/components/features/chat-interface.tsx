@@ -135,6 +135,14 @@ export default function ChatInterface() {
   // 添加DEBUG输出状态
   const [debugOutput, setDebugOutput] = useState<string[]>([]);
   const [welcomeCardKey, setWelcomeCardKey] = useState(0); // 添加状态用于刷新欢迎卡片
+  const [sseMsgKefu, setSseMsgKefu] = useState({});
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMobile();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const currentMessageRef = useRef(0);
 
   // 添加自动调整输入框高度的方法
   const adjustTextareaHeight = (textarea: HTMLTextAreaElement | null) => {
@@ -158,6 +166,45 @@ export default function ChatInterface() {
     }
   };
 
+  const setupSSEConnection = (chatId: string) => {
+    const eventSource = new EventSource(
+      `${process.env.NEXT_PUBLIC_FASTGPT_API_URL}/openapi/v1/sse/user_updates?chatid=${chatId}`,
+      {
+        withCredentials: true,
+      }
+    );
+
+    eventSource.onmessage = (e) => {
+      console.log(e);
+    };
+
+    eventSource.addEventListener("connection_ready", (e) => {
+      const data = JSON.parse(e.data);
+      console.log("初始化推送:", data);
+    });
+
+    eventSource.addEventListener("agent_message", (e) => {
+      const data = JSON.parse(e.data);
+      setSseMsgKefu(data)
+      console.log("转工作台回复", data);
+    });
+
+    eventSource.onerror = (e) => {
+      console.error("SSE连接错误", e);
+      eventSource.close();
+    };
+  };
+
+  useEffect(()=>{
+    console.log("插入客服回复",sseMsgKefu,sseMsgKefu.content);
+    if(sseMsgKefu&&sseMsgKefu.content){
+      const newKefu = {content:sseMsgKefu.content,type:"ai",timestamp:sseMsgKefu.timestamp}
+      
+      setMessages((prev)=>[...prev, newKefu])
+    }
+
+  },[sseMsgKefu])
+
   useEffect(() => {
     forceLog("组件初始化");
 
@@ -170,7 +217,7 @@ export default function ChatInterface() {
         const data = await res.json();
         forceLog("获取到chatId:", data.chatId);
         setChatId(data.chatId);
-
+        setupSSEConnection(data.chatId);
         // 移除localStorage相关逻辑
       } catch (error) {
         forceLog("获取会话ID错误:", error);
@@ -180,13 +227,7 @@ export default function ChatInterface() {
     fetchChatId();
   }, []);
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isMobile = useMobile();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+ 
   // 输入框高度调整
   useEffect(() => {
     adjustTextareaHeight(textareaRef.current);
@@ -269,6 +310,7 @@ export default function ChatInterface() {
         mhSessionId: "",
         detail: true,
         stream: true,
+        type_id: currentMessageRef.current,
       };
 
       forceLog("发送请求到API: /api/chat", requestBody);
@@ -279,6 +321,17 @@ export default function ChatInterface() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
+
+      // 获取响应头部信息
+      if (res.ok) {
+        console.log("响应成功！状态码：", res.status);
+      
+        // 获取特定的响应头
+        const headerTypeId = res.headers.get("type-id");
+        if(headerTypeId){
+          currentMessageRef.current = headerTypeId 
+        }
+      }
 
       // 验证响应
       forceLog("收到API响应:", {
