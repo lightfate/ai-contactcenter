@@ -5,175 +5,185 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #1e293b;
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --secondary: #8b5cf6;
-  --accent: #0ea5e9;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --gray-light: #f1f5f9;
-  --gray-medium: #94a3b8;
-  --gray-dark: #475569;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-    --primary: #60a5fa;
-    --primary-dark: #3b82f6;
-    --secondary: #a78bfa;
-    --accent: #38bdf8;
-    --success: #34d399;
-    --warning: #fbbf24;
-    --danger: #f87171;
-    --gray-light: #1e293b;
-    --gray-medium: #64748b;
-    --gray-dark: #cbd5e1;
-  }
+  --foreground: 0, 0, 0;
+  --background: 255, 255, 255;
+  --primary: 0, 207, 221; /* 青色主色调 #00CFDD */
+  --primary-foreground: 255, 255, 255;
+  --secondary: 248, 248, 248; /* 浅灰色背景，类似苹果官网 */
+  --secondary-foreground: 0, 0, 0;
+  --accent: 0, 169, 180; /* 深青色强调色 */
+  --accent-foreground: 255, 255, 255;
+  --muted: 245, 245, 247; /* 苹果风格的浅灰色 */
+  --muted-foreground: 115, 115, 115;
+  --destructive: 255, 0, 0;
+  --destructive-foreground: 255, 255, 255;
+  --border: 230, 230, 230;
+  --input: 230, 230, 230;
+  --ring: 0, 207, 221;
+  --radius: 0.75rem;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-geist);
-  line-height: 1.6;
-  letter-spacing: -0.01em;
+  @apply bg-background text-foreground;
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-.bg-grid-pattern {
-  background-image: radial-gradient(circle at 1px 1px, #94a3b8 1px, transparent 0);
-  background-size: 40px 40px;
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-medium tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl sm:text-5xl md:text-6xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl sm:text-4xl font-semibold;
+  }
+
+  h3 {
+    @apply text-2xl sm:text-3xl font-medium;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
 }
 
-/* 添加一些全局动画类 */
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-2.5 rounded-full font-medium hover:bg-accent transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-900 text-white px-6 py-2.5 rounded-full font-medium hover:bg-gray-800 transition-colors;
+  }
+
+  .btn-tertiary {
+    @apply bg-transparent text-gray-900 px-6 py-2.5 rounded-full font-medium hover:bg-gray-100 transition-colors border border-gray-300;
+  }
+
+  .card {
+    @apply bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300;
+  }
+
+  .section {
+    @apply py-20 md:py-28;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-semibold text-center mb-4;
+  }
+
+  .section-subtitle {
+    @apply text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+
+  .feature-card {
+    @apply bg-white p-6 rounded-xl border border-gray-100 shadow-sm;
+  }
+
+  .feature-icon {
+    @apply w-12 h-12 rounded-xl flex items-center justify-center mb-4;
+  }
+
+  .apple-nav {
+    @apply h-12 bg-white/90 backdrop-blur-md border-b border-gray-200;
+  }
+
+  .apple-section {
+    @apply py-16 sm:py-20 md:py-24;
+  }
+
+  .blog-card {
+    @apply bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  /* 点状背景相关样式 */
+  .dot-background {
+    @apply absolute inset-0 overflow-hidden pointer-events-none;
+  }
+
+  .dot {
+    @apply rounded-full bg-primary;
+  }
 }
 
-@keyframes pulse-glow {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-}
-
-@keyframes blob {
-  0% { transform: scale(1); }
-  33% { transform: scale(1.1); }
-  66% { transform: scale(0.9); }
-  100% { transform: scale(1); }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-glow {
-  animation: pulse-glow 2s infinite;
-}
-
-/* 增加渐变文本效果 */
-.gradient-text {
-  background: linear-gradient(to right, #2563eb, #7c3aed, #0ea5e9);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  background-size: 200% auto;
-  animation: gradient 3s linear infinite;
-}
-
-@keyframes gradient {
-  0% { background-position: 0% center; }
-  50% { background-position: 100% center; }
-  100% { background-position: 0% center; }
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 15s linear infinite;
-}
-
-/* 增强卡片悬停效果 */
-.card-hover {
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.card-hover:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* 增强可读性的排版 */
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.025em;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-p {
-  max-width: 70ch;
-  line-height: 1.7;
-}
-
-/* 专业按钮样式 */
-.btn-primary {
-  @apply px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
-}
-
-.btn-secondary {
-  @apply px-6 py-3 bg-white text-blue-600 font-medium rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
-}
-
-@keyframes slide-in-right {
+/* Animations */
+@keyframes fadeIn {
   from {
-    transform: translateX(-100%);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
     opacity: 1;
   }
 }
 
-@keyframes slide-in-left {
+@keyframes slideUp {
   from {
-    transform: translateX(100%);
+    transform: translateY(20px);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
 
-.animate-slide-in-right {
-  animation: slide-in-right 0.5s ease-out forwards;
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
 }
 
-.animate-slide-in-left {
-  animation: slide-in-left 0.5s ease-out forwards;
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out forwards;
+}
+
+/* Staggered animations */
+.stagger-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.stagger-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.stagger-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.stagger-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.stagger-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
+.stagger-item:nth-child(6) {
+  animation-delay: 0.6s;
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .apple-section {
+    @apply py-12;
+  }
+
+  h1 {
+    @apply text-3xl;
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
 }
 
 /* 聊天相关样式 */
