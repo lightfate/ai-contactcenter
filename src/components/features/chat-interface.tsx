@@ -9,6 +9,8 @@ import ChatMessage from "./chat-message";
 import WelcomeCard from "./welcome-card";
 import Image from "next/image";
 import { type Message, MessageType } from "@/types/chat";
+import { customAlphabet } from 'nanoid';
+
 // 注意：不再使用Button组件，改用原生button来避免可能的事件问题
 
 // 全局日志函数，确保始终打印，控制日志长度
@@ -144,6 +146,7 @@ export default function ChatInterface() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentMessageRef = useRef(0);
 
+
   // 添加自动调整输入框高度的方法
   const adjustTextareaHeight = (textarea: HTMLTextAreaElement | null) => {
     if (!textarea) return;
@@ -181,6 +184,12 @@ export default function ChatInterface() {
     eventSource.addEventListener("connection_ready", (e) => {
       const data = JSON.parse(e.data);
       console.log("初始化推送:", data);
+    });
+
+    eventSource.addEventListener("Service_status_switch_notification", (e) => {
+      const data = JSON.parse(e.data);
+      console.log("客服转ai:", data);
+      currentMessageRef.current = data.type_id
     });
 
     eventSource.addEventListener("agent_message", (e) => {
@@ -226,6 +235,48 @@ export default function ChatInterface() {
 
     fetchChatId();
   }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      
+      if (!chatId) return; 
+      changeType(2,chatId)
+
+      event.preventDefault(); // 阻止默认行为（用于显示提示）
+      event.returnValue = ""; // 某些浏览器需要设置 `returnValue` 才会显示提示
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      // 在组件卸载时移除监听器
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [chatId]);
+
+  const changeType = async(type_id:any,chatid:any) =>{
+    console.log("关闭对话",type_id,chatid);
+    try{
+      const res = await fetch(`/openapi/v1/chatid_convert?chatId=${chatid}&session_status=${type_id}`)
+      console.log("关闭成功",res);
+      
+    }catch(err){
+      console.log("关闭失败");
+    }
+  }
+
+  const getNanoid = (size = 12) => {
+    const firstChar = customAlphabet('abcdefghijklmnopqrstuvwxyz', 1)();
+  
+    if (size === 1) return firstChar;
+  
+    const randomsStr = customAlphabet(
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
+      size - 1
+    )();
+  
+    return `${firstChar}${randomsStr}`;
+  };
 
  
   // 输入框高度调整
@@ -292,18 +343,22 @@ export default function ChatInterface() {
       //   messages: [{ role: "user", content: input }]
       // };
 
+      
+      const dataId = getNanoid(24);
+
+
       const requestBody = {
         messages: [
           {
             content: input,
             role: "user",
-            dataId: "e8Wdg6es3zqtrYBPwE7rCwcF",
+            dataId: dataId,
           },
         ],
         variables: {},
         shareId: "h04fipa8v37jhjtrh1k48fc6",
         chatId: chatId,
-        responseChatItemId: "vz6NH6vT3VZ6wje8LFFC00HL",
+        responseChatItemId: responseChatItemId,
         appType: "advanced",
         outLinkUid: "shareChat",
         mhUrl: "",
@@ -557,6 +612,10 @@ export default function ChatInterface() {
                           node.quoteList
                       );
 
+                      forceLog("处理flowResponses事件11111111111:", searchNode);
+
+                      
+
                       if (
                         searchNode &&
                         searchNode.quoteList &&
@@ -620,6 +679,10 @@ export default function ChatInterface() {
                               url: url,
                               id: uniqueId, // 添加一个唯一ID，用于区分相同标题的来源
                               fileId: quote.fileId, // 保留原始fileId以备后用
+                              sourceId:quote.sourceId,
+                              collectionId:quote.collectionId,
+                              datasetId:quote.datasetId,
+                              
                             };
                           }
                         );
@@ -780,6 +843,7 @@ export default function ChatInterface() {
 
         <AnimatePresence initial={false}>
           {messages.map((message) => (
+            
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 20 }}
@@ -787,7 +851,7 @@ export default function ChatInterface() {
               transition={{ duration: 0.3 }}
               data-message-id={message.id}
             >
-              <ChatMessage message={message} />
+             {message.content&& <ChatMessage message={message} />}
             </motion.div>
           ))}
         </AnimatePresence>

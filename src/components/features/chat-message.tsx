@@ -74,6 +74,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
   const [showInitialLoading, setShowInitialLoading] = useState(true)
   const [showSources, setShowSources] = useState(false)  // 控制来源的显示
   const isAI = message.type === MessageType.AI
+  const [sourceHref,setSourceHref] = useState("")
+
+  console.log("123465789",message);
+  
 
   // 确保sources存在且不为空
   const hasSources = Array.isArray(message.sources) && message.sources.length > 0
@@ -122,12 +126,16 @@ export default function ChatMessage({ message }: ChatMessageProps) {
   const hasValidSources = useMemo(() => {
     return processedSources.some(source => source.url && source.url !== '#');
   }, [processedSources]);
+  
 
   // 确定是否需要折叠来源
   const shouldCollapseSources = processedSources.length > 3;
 
   // 要显示的来源
   const displayedSources = showAllSources ? processedSources : processedSources.slice(0, 3);
+
+  console.log("displayedSources============",displayedSources);
+  
 
   // 初始加载效果 - 仅对AI消息显示
  
@@ -175,6 +183,32 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       setShowSources(false);
     }
   }, [currentIndex, isAI, message.content.length, message.isLoading]);
+
+  const getHref = async (item:any) => {
+    console.log("获取链接地址",item);
+    try{
+      const response = await fetch(
+        `/openapi/v1/dataset/collection?collection_id=${item.collectionId}`
+        ,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).then(res=>res.json());
+
+      console.log("response=========",response);
+      // window.open(response.data.url + "&officePreviewType=pdf")
+      window.open( "http://172.30.232.99:3003"+response.data.file_url )
+
+      setSourceHref(`${response.data.url}&officePreviewType=pdf`)
+      
+    }catch(err){
+
+    }
+    
+  }
 
   // 当消息内容变化时重置
   useEffect(() => {
@@ -232,7 +266,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     <div className="mb-4 w-auto inline-block mx-auto">
       <div className="rounded-[32px] bg-[#F5F5F5] p-6 relative" data-message-id={message.id}>
         {/* 标题行 */}
-        <div className="flex items-center justify-between mb-3">
+        {message.content&&<div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-auto h-auto text-blue-600">
             <div className="rounded-md ">
@@ -255,7 +289,8 @@ export default function ChatMessage({ message }: ChatMessageProps) {
               </TooltipContent>
             </Tooltip>
           )}
-        </div>
+        </div>}
+        
         
         {/* 调试信息 */}
         <div className="hidden">
@@ -266,7 +301,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         
         {/* 内容区 */}
         <div className="message-content markdown-body text-base">
-          {message.content ? (
+          {message.content && (
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -299,13 +334,16 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             >
               {displayedText}
             </ReactMarkdown>
-          ) : (
-            <div className="text-gray-400">无内容</div>
-          )}
+          )
+          //  : (
+          //   <div className="text-gray-400">无内容</div>
+          // )
+          }
         </div>
 
         {/* 来源区 - 使用#e2e2e2分割线 */}
-        {SHOW_SOURCE_SECTION && hasSources && showSources && hasValidSources && (
+        {/* {SHOW_SOURCE_SECTION && hasSources && showSources && hasValidSources && ( */}
+        {SHOW_SOURCE_SECTION && hasSources && showSources &&  (
           <div className="mt-4 pt-4 border-t border-[#e2e2e2]">
             <div className="flex items-center mb-2">
               <span className="text-sm font-medium text-gray-700">查看文档</span>
@@ -328,10 +366,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                 const uniqueKey = `${index}-${source.id || Math.random()}`;
                 
                 // 检查URL是否有效 (不是 "#" 或空)
-                const hasValidUrl = source.url && source.url !== '#';
+                // const hasValidUrl = source.url && source.url !== '#';
                 
                 // 如果URL无效，跳过该项
-                if (!hasValidUrl) return null;
+                // if (!hasValidUrl) return null;
                 
                 return (
                   <motion.div
@@ -339,9 +377,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 * index }}
+                    onClick={()=>getHref(source)}
                   >
                     <a
-                      href={source.url}
+                      // href={source.url}
                       className="flex items-center justify-between p-2 px-3 rounded-lg hover:bg-gray-200 text-sm transition-colors cursor-pointer"
                       target="_blank"
                       rel="noopener noreferrer"

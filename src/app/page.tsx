@@ -141,7 +141,7 @@ export default function Home() {
       const data = await response.json();
       const token = data.data.token;
       cookies.set("eai_token", token, { path: "/" });
-
+      
       localStorage.setItem("authToken", token);
 
       return data.token;
