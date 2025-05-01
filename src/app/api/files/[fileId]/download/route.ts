@@ -7,10 +7,10 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fileId: string } }
+  context: { params: Promise<{ fileId: string }> }
 ) {
   try {
-    const fileId = params.fileId;
+    const { fileId } = await context.params;
     
     // 日志记录，帮助调试
     console.log(`[API] 收到文件下载请求: ${fileId}`);
@@ -32,8 +32,8 @@ export async function GET(
     
     if (!response.ok) {
       console.error(`[API] 文件下载失败: ${response.status} ${response.statusText}`);
-      return new NextResponse(
-        JSON.stringify({ error: '文件获取失败', status: response.status }),
+      return NextResponse.json(
+        { error: '文件获取失败', status: response.status },
         { status: response.status }
       );
     }
@@ -61,8 +61,8 @@ export async function GET(
     
   } catch (error) {
     console.error('[API] 文件下载处理错误:', error);
-    return new NextResponse(
-      JSON.stringify({ error: '服务器内部错误' }),
+    return NextResponse.json(
+      { error: '服务器内部错误' },
       { status: 500 }
     );
   }
