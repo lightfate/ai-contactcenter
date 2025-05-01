@@ -798,7 +798,7 @@ export default function ChatInterface() {
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === aiMessageId
-            ? { ...msg, content: "请求出错，请稍后重试。", isLoading: false }
+            ? { ...msg, content: "不好意思，服务器暂时无法连接，请稍后再试。", isLoading: false }
             : msg
         )
       );

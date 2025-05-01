@@ -285,7 +285,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             </div>
             <h2 className="text-base font-bold">青青（工号：7088，您的专属客服）</h2>
           </div>
-          {message.content !== "请求出错，请稍后重试。" && (
+          {message.content !== "不好意思，服务器暂时无法连接，请稍后再试。" && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="w-5 h-5 text-gray-500 cursor-help">
