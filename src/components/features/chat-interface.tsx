@@ -673,18 +673,16 @@ export default function ChatInterface() {
                             }
 
                             // 尝试构建有效的URL
-                            let url = "#";
-
-                            // 如果有fileId，可以构建下载链接
-                            if (quote.fileId) {
-                              url = `/api/files/${quote.fileId}/download`;
-                            } else if (quote.url && quote.url !== "#") {
+                            let url = '#';
+                            
+                            // 直接使用已有URL
+                            if (quote.url && quote.url !== '#') {
                               url = quote.url;
                             }
-
+                            
                             // 为调试添加一个随机ID，这样每个来源都是唯一的，方便检查
                             const uniqueId = Math.floor(Math.random() * 10000);
-
+                            
                             return {
                               title: title,
                               url: url,

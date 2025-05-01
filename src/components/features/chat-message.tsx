@@ -32,6 +32,11 @@ const extractPdfFileName = (text: string): string => {
 // 可以修改为false来完全隐藏来源区
 const SHOW_SOURCE_SECTION = true;
 
+// 添加安全检测函数，确保访问是否有某个字段前先检查对象是否存在
+const safeLength = (arr: any[] | undefined | null): number => {
+  return arr && Array.isArray(arr) ? arr.length : 0;
+};
+
 /**
  * 加载动画组件
  * 使用单个圆点实现加载效果
@@ -124,15 +129,20 @@ export default function ChatMessage({ message }: ChatMessageProps) {
 
   // 检查是否有有效的URL (不是 "#")
   const hasValidSources = useMemo(() => {
-    return processedSources.some(source => source.url && source.url !== '#');
+    if (!processedSources || !Array.isArray(processedSources) || processedSources.length === 0) {
+      return false;
+    }
+    return processedSources.some(source => source && source.url && source.url !== '#');
   }, [processedSources]);
   
 
   // 确定是否需要折叠来源
-  const shouldCollapseSources = processedSources.length > 3;
+  const shouldCollapseSources = safeLength(processedSources) > 3;
 
   // 要显示的来源
-  const displayedSources = showAllSources ? processedSources : processedSources.slice(0, 3);
+  const displayedSources = showAllSources 
+    ? processedSources || [] 
+    : (processedSources || []).slice(0, 3);
 
   console.log("displayedSources============",displayedSources);
   
@@ -409,7 +419,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
               })}
               
               {/* 显示更多/更少按钮 - 移到列表下方并左对齐 */}
-              {shouldCollapseSources && (
+              {shouldCollapseSources && safeLength(processedSources) > 0 && (
                 <Button
                 variant="ghost"
                 size="sm"
@@ -429,7 +439,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                   </>
                 ) : (
                   <>
-                    <span>显示更多 ({processedSources.length - 3})</span>
+                    <span>显示更多 ({safeLength(processedSources) - 3})</span>
                     <Image 
                       src="/icons/arrow-down.svg" 
                       alt="展开" 

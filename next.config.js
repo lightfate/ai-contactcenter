@@ -20,7 +20,21 @@ const nextConfig = {
         destination: process.env.NEXT_PUBLIC_FASTGPT_API_URL + '/openapi/:path*',
       }
     ]
-  }
+  },
+  reactStrictMode: true,
+  webpack: (config, { dev, isServer }) => {
+    // 仅在生产构建时修改缓存配置
+    if (!dev) {
+      // 降低webpack缓存使用
+      config.cache = {
+        type: 'memory', // 使用内存缓存而非磁盘
+        maxGenerations: 1,
+      };
+    }
+    return config;
+  },
+  // 减少输出文件夹大小
+  output: 'standalone',
 }
 
 module.exports = nextConfig 
