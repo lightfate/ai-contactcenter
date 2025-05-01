@@ -9,17 +9,50 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        primary: "var(--primary)",
-        "primary-foreground": "#ffffff",
-        secondary: "var(--secondary)",
-        accent: "var(--accent)",
-        success: "var(--success)",
-        warning: "var(--warning)",
-        danger: "var(--danger)",
+        background: "rgb(var(--background))",
+        foreground: "rgb(var(--foreground))",
+        primary: "rgb(var(--primary))",
+        "primary-foreground": "rgb(var(--primary-foreground))",
+        secondary: "rgb(var(--secondary))",
+        "secondary-foreground": "rgb(var(--secondary-foreground))",
+        accent: "rgb(var(--accent))",
+        "accent-foreground": "rgb(var(--accent-foreground))",
+        muted: "rgb(var(--muted))",
+        "muted-foreground": "rgb(var(--muted-foreground))",
+        destructive: "rgb(var(--destructive))",
+        "destructive-foreground": "rgb(var(--destructive-foreground))",
+        border: "rgb(var(--border))",
+        input: "rgb(var(--input))",
+        ring: "rgb(var(--ring))",
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '100%',
+            h2: {
+              marginTop: '1.5em',
+            },
+            h3: {
+              marginTop: '1.25em',
+            },
+            a: {
+              color: 'rgb(var(--primary))',
+              '&:hover': {
+                color: 'rgb(var(--accent))',
+              },
+            },
+            strong: {
+              fontWeight: '600',
+            },
+            table: {
+              fontSize: '0.875rem',
+            },
+          },
+        },
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 } satisfies Config;

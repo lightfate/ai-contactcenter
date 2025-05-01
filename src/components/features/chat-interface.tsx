@@ -11,6 +11,13 @@ import Image from "next/image";
 import { type Message, MessageType } from "@/types/chat";
 import { customAlphabet } from 'nanoid';
 
+// 定义客服消息的接口
+interface KefuMessage {
+  content?: string;
+  timestamp?: number;
+  type?: string;
+}
+
 // 注意：不再使用Button组件，改用原生button来避免可能的事件问题
 
 // 全局日志函数，确保始终打印，控制日志长度
@@ -137,7 +144,7 @@ export default function ChatInterface() {
   // 添加DEBUG输出状态
   const [debugOutput, setDebugOutput] = useState<string[]>([]);
   const [welcomeCardKey, setWelcomeCardKey] = useState(0); // 添加状态用于刷新欢迎卡片
-  const [sseMsgKefu, setSseMsgKefu] = useState({});
+  const [sseMsgKefu, setSseMsgKefu] = useState<KefuMessage>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -189,12 +196,12 @@ export default function ChatInterface() {
     eventSource.addEventListener("Service_status_switch_notification", (e) => {
       const data = JSON.parse(e.data);
       console.log("客服转ai:", data);
-      currentMessageRef.current = data.type_id
+      currentMessageRef.current = Number(data.type_id);
     });
 
     eventSource.addEventListener("agent_message", (e) => {
-      const data = JSON.parse(e.data);
-      setSseMsgKefu(data)
+      const data = JSON.parse(e.data) as KefuMessage;
+      setSseMsgKefu(data);
       console.log("转工作台回复", data);
     });
 
@@ -206,10 +213,15 @@ export default function ChatInterface() {
 
   useEffect(()=>{
     console.log("插入客服回复",sseMsgKefu,sseMsgKefu.content);
-    if(sseMsgKefu&&sseMsgKefu.content){
-      const newKefu = {content:sseMsgKefu.content,type:"ai",timestamp:sseMsgKefu.timestamp}
+    if(sseMsgKefu && sseMsgKefu.content){
+      const newKefu: Message = {
+        id: Date.now().toString(),
+        content: sseMsgKefu.content,
+        type: MessageType.AI,
+        isLoading: false
+      }
       
-      setMessages((prev)=>[...prev, newKefu])
+      setMessages((prev) => [...prev, newKefu])
     }
 
   },[sseMsgKefu])
@@ -237,7 +249,7 @@ export default function ChatInterface() {
   }, []);
 
   useEffect(() => {
-    const handleBeforeUnload = (event) => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       
       if (!chatId) return; 
       changeType(2,chatId)
@@ -254,18 +266,17 @@ export default function ChatInterface() {
     };
   }, [chatId]);
 
-  const changeType = async(type_id:any,chatid:any) =>{
-    console.log("关闭对话",type_id,chatid);
-    try{
-      const res = await fetch(`/openapi/v1/chatid_convert?chatId=${chatid}&session_status=${type_id}`)
-      console.log("关闭成功",res);
-      
-    }catch(err){
+  const changeType = async(type_id: number, chatid: string) => {
+    console.log("关闭对话", type_id, chatid);
+    try {
+      const res = await fetch(`/openapi/v1/chatid_convert?chatId=${chatid}&session_status=${type_id}`);
+      console.log("关闭成功", res);
+    } catch(err) {
       console.log("关闭失败");
     }
   }
 
-  const getNanoid = (size = 12) => {
+  const getNanoid = (size = 12): string => {
     const firstChar = customAlphabet('abcdefghijklmnopqrstuvwxyz', 1)();
   
     if (size === 1) return firstChar;
@@ -384,7 +395,7 @@ export default function ChatInterface() {
         // 获取特定的响应头
         const headerTypeId = res.headers.get("type-id");
         if(headerTypeId){
-          currentMessageRef.current = headerTypeId 
+          currentMessageRef.current = Number(headerTypeId);
         }
       }
 
