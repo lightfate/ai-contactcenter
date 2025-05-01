@@ -13,8 +13,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "AI-CXaas | AI驱动的联络中心解决方案",
-  description: "重新定义客户服务的AI驱动十倍增长引擎",
+  title: "Cyanix | AI驱动的联络中心解决方案",
+  description: "重新定义客户服务，AI驱动十倍增长引擎",
 }
 
 export default function RootLayout({

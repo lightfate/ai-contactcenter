@@ -845,8 +845,8 @@ export default function ChatInterface() {
         ))}
       </div>*/}
 
-      {/* 对话区域：统一背景色，调整底部边距使输入框遮挡部分内容 */}
-      <div className="flex-1 p-4 pb-10 space-y-4 overflow-y-auto bg-white">
+      {/* 对话区域：统一背景色，调整底部边距使输入框不遮挡部分内容 */}
+      <div className="flex-1 p-4 pb-32 space-y-4 overflow-y-auto bg-white">
         {/* 欢迎卡片 - 始终显示为第一条消息 */}
         <WelcomeCard key={welcomeCardKey} />
 

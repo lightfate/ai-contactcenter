@@ -19,7 +19,7 @@ export default function ChatLayout({
   children: React.ReactNode
 }>) {
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen">
       {/* 聊天页面专属header */}
       <header className="sticky top-0 z-10 border-b bg-white/90 backdrop-blur-sm">
         <div className="container flex h-14 items-center px-4 max-w-4xl mx-auto">
@@ -44,17 +44,11 @@ export default function ChatLayout({
       </header>
       
       {/* 聊天内容区 */}
-      {children}
+      <div className="flex-grow">
+        {children}
+      </div>
       
-      {/* 聊天页面的简化页脚 */}
-      <footer className="bg-gray-50 border-t border-gray-100 py-4">
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-xs text-gray-500">版权所有©2000-2025 北京星网锐捷网络技术有限公司</p>
-          </div>
-          
-        </div>
-      </footer>
+    
     </div>
   )
 } 

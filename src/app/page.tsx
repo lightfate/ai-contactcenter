@@ -30,29 +30,96 @@ export default function Home() {
   return (
     <>
       {/* Hero Section - 苹果风格 */}
-      <section className="apple-section bg-white relative overflow-hidden">
+      <section className="apple-section bg-white relative overflow-hidden dot-matrix-bg">
         {mounted && <GridDotBackground />}
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center px-4">
             <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-semibold mb-4 animate-slide-up opacity-0"
-              style={{ animationFillMode: "forwards" }}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold tracking-tight mb-6 animate-slide-up opacity-0 text-shadow-md"
+              style={{ 
+                animationFillMode: "forwards",
+                letterSpacing: "0.05em"
+              }}
             >
-              让每一次互动都成为增长的机会
+              <span className="inline-block">让每一次<span className="key-underline-cyan">互动</span></span>
+              <br className="sm:hidden" />
+              <span className="inline-block">都成为</span>
+              <br />
+              <span className="inline-block"><span className="key-underline-purple">增长</span>的机会</span>
             </h1>
             <p
-              className="text-lg sm:text-xl text-gray-600 mb-8 max-w-3xl mx-auto animate-slide-up opacity-0"
-              style={{ animationDelay: "0.2s", animationFillMode: "forwards" }}
+              className="text-md sm:text-lg md:text-xl text-gray-700 mb-10 max-w-3xl mx-auto animate-slide-up opacity-0 leading-relaxed tracking-wide text-spaced"
+              style={{ 
+                animationDelay: "0.2s", 
+                animationFillMode: "forwards",
+                letterSpacing: "0.1em" 
+              }}
             >
-              With Cyanix,  Every Voice Matters,  Every Touch Grows
+              <span className="relative">
+                <span className="inline-block relative text-elegant">
+                  <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-primary/40 rounded-full"></span>
+                  With Cyanix
+                </span>
+                <span className="mx-2 text-primary animate-subtle-bounce inline-block">·</span>
+                <span className="inline-block relative text-elegant">
+                  <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-primary/40 rounded-full"></span>
+                  Every Voice Matters
+                </span>
+                <span className="mx-2 text-primary animate-subtle-bounce inline-block">·</span>
+                <span className="inline-block relative text-elegant">
+                  <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-primary/40 rounded-full"></span>
+                  Every Touch Grows
+                </span>
+              </span>
             </p>
             <div
               className="flex flex-wrap justify-center gap-4 animate-slide-up opacity-0"
               style={{ animationDelay: "0.4s", animationFillMode: "forwards" }}
             >
-              <Link href="/chat" className="btn-primary">
-                立即体验
+              <Link 
+                href="/chat" 
+                className="btn-primary group transition-all duration-300 transform hover:scale-105 hover:shadow-lg relative overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center font-semibold">
+                  立即体验
+                  <span className="inline-block ml-2 transition-transform duration-300 group-hover:translate-x-1">
+                    <ArrowRight size={18} />
+                  </span>
+                </span>
+                <span className="absolute inset-0 animate-shimmer opacity-50"></span>
               </Link>
+            </div>
+            
+            <div 
+              className="mt-16 flex justify-center animate-slide-up opacity-0"
+              style={{ animationDelay: "0.6s", animationFillMode: "forwards" }}
+            >
+              <button 
+                onClick={() => {
+                  const nextSection = document.querySelector('.py-16.bg-secondary');
+                  if (nextSection) {
+                    nextSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="animate-float flex flex-col items-center cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary/70 shadow-sm">
+                  <svg 
+                    className="w-5 h-5 text-primary" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2.5} 
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+                    />
+                  </svg>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -183,30 +250,30 @@ export default function Home() {
 
             {/* 价值点 */}
             <div>
-              <h3 className="text-2xl font-semibold mb-6 text-primary border-b border-primary/20 pb-2">我们的价值</h3>
+              <h3 className="text-2xl font-semibold mb-8 text-primary border-b border-primary/20 pb-2">互动增长价值</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm">
-                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
-                    <Check className="h-6 w-6 text-primary" />
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm transform transition-all duration-300 hover:shadow-lg hover:-translate-y-2 group">
+                  <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <Check className="h-7 w-7 text-primary" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">精准答</h3>
-                  <p className="text-gray-600">通过多模态精准理解客户需求与自动化高效解决问题，接管95%场景的咨询问题，帮助客服部门降低10倍服务成本。</p>
+                  <h3 className="text-xl font-medium mb-3 group-hover:text-primary transition-colors duration-300">智慧互动•精准解答</h3>
+                  <p className="text-gray-600">多模态理解技术助力精准互动，每次对话转化为价值连接，接管95%场景问题，客服成本降低10倍。</p>
                 </div>
 
-                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm">
-                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
-                    <Zap className="h-6 w-6 text-primary" />
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm transform transition-all duration-300 hover:shadow-lg hover:-translate-y-2 group">
+                  <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <Zap className="h-7 w-7 text-primary" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">简单搭</h3>
-                  <p className="text-gray-600">让一线客服人员专注在服务设计上，自己就能把服务构想变成可落地的数字工具，帮助企业将服务创新速度提升10倍，成本降低至1/20。</p>
+                  <h3 className="text-xl font-medium mb-3 group-hover:text-primary transition-colors duration-300">敏捷搭建•快速增长</h3>
+                  <p className="text-gray-600">客服人员可直接将服务构想落地实现，创新迭代速度提升10倍，成本降低至1/20，加速业务增长。</p>
                 </div>
 
-                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm">
-                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
-                    <Search className="h-6 w-6 text-primary" />
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm transform transition-all duration-300 hover:shadow-lg hover:-translate-y-2 group">
+                  <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <Search className="h-7 w-7 text-primary" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">全量查</h3>
-                  <p className="text-gray-600">通过非结构化数据全量分析引擎，结合用户任务流程构建场景数据链，实现服务数据闭环。</p>
+                  <h3 className="text-xl font-medium mb-3 group-hover:text-primary transition-colors duration-300">全量洞察•价值闭环</h3>
+                  <p className="text-gray-600">通过非结构化数据全量分析，构建用户任务流程场景链，实现互动数据价值闭环，持续赋能业务增长。</p>
                 </div>
               </div>
             </div>
@@ -373,7 +440,7 @@ export default function Home() {
                   height={120}
                   className="object-contain"
                 />
-                <p className="text-sm text-gray-700 font-medium mt-2">官方微信</p>
+                <p className="text-sm text-gray-700 font-medium mt-2">或者添加官方微信</p>
               </div>
             </div>
           </div>

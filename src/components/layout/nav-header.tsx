@@ -36,7 +36,7 @@ export default function NavHeader() {
               <div className="rounded-md">
                 <Image src="/logo.png" alt="Logo" width={32} height={32} />
               </div>
-              <span className="text-base font-medium text-gray-700"> Cyanix 锐捷青鸟AI联络中心解决方案</span>
+              <span className="text-base font-medium text-gray-700"> &nbsp;Cyanix</span><span className="text-sm font-normal text-gray-700"> &nbsp;锐捷青鸟AI联络中心</span>
             </Link>
           </div>
 
