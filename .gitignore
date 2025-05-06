@@ -52,3 +52,6 @@ next-env.d.ts
 *~
 *.bak
 *.backup
+
+# 锁文件
+package-lock.json
