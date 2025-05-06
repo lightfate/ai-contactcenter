@@ -4,6 +4,9 @@ import { Check, DollarSign, Zap, ChevronRight, ArrowRight, Settings, BarChart, S
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import Image from "next/image"
+import { Cookies } from "react-cookie";
+const cookies = new Cookies();
+
 
 // 动态导入组件
 const GridDotBackground = dynamic(() => import("@/components/GridDotBackground"), {
@@ -24,8 +27,44 @@ export default function Home() {
 
   // 确保组件在客户端渲染
   useEffect(() => {
+    login()
+
     setMounted(true)
   }, [])
+
+  const login = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_FASTGPT_API_URL}/openapi/v1/user/loginByPassword`
+        ,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: "root",
+            password:
+              "53e880894f3cc53d5071c679f1afcd223a3faca09148c6898da13f0afc3535ad",
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("登录失败");
+      const data = await response.json();
+      const token = data.data.token;
+      
+      // 设置token到cookie和localStorage
+      cookies.set("eai_token", token, { path: "/" });
+      localStorage.setItem("authToken", token);
+
+      return token;
+    } catch (error) {
+      console.error("登录错误:", error);
+      
+      return null;
+    }
+  };
 
   return (
     <>
